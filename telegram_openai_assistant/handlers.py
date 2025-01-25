@@ -15,7 +15,7 @@ class BotHandlers:
 
     async def start(self, update: Update, context: CallbackContext) -> None:
         """Sends a welcome message to the user."""
-        await context.bot.send_sticker(message.chat.id, "CAACAgIAAxkBAAEL3IhnkkzltKE9c7VWaAKQOCOAWBYu3QACY2IAAo_RkUgT75gxRA0-4jYE")
+        await context.bot.send_sticker(update.effective_chat.id, "CAACAgIAAxkBAAEL3IhnkkzltKE9c7VWaAKQOCOAWBYu3QACY2IAAo_RkUgT75gxRA0-4jYE")
         await context.bot.send_message(
             chat_id=update.effective_chat.id, text="Здравствуйте! Меня зовут Дмитрий, я основатель компании Weform. Я создал виртуального помощника, "
     "чтобы помочь вам с выбором банного чана и ответить на любые вопросы. Просто спросите, что вас интересует."
