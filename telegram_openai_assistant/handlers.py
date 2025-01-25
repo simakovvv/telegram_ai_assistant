@@ -15,15 +15,17 @@ class BotHandlers:
 
     async def start(self, update: Update, context: CallbackContext) -> None:
         """Sends a welcome message to the user."""
+        await context.bot.send_sticker(message.chat.id, "CAACAgIAAxkBAAEL3IhnkkzltKE9c7VWaAKQOCOAWBYu3QACY2IAAo_RkUgT75gxRA0-4jYE")
         await context.bot.send_message(
-            chat_id=update.effective_chat.id, text="Hello! Ask me anything."
+            chat_id=update.effective_chat.id, text="Здравствуйте! Меня зовут Дмитрий, я основатель компании Weform. Я создал виртуального помощника, "
+    "чтобы помочь вам с выбором банного чана и ответить на любые вопросы. Просто спросите, что вас интересует."
         )
 
     async def help_command(self, update: Update, context: CallbackContext) -> None:
         """Sends a help message to the user."""
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="Just send me a question and I'll try to answer it.",
+            text="Помошник отвечает на любые вопросы касающиеся банныйх чанов. Если вы хотите, чтобы мы связались с вами - попросите ссылки на форму обратной связи или наш телефон.",
         )
 
     def get_answer(self, message_str) -> None:
