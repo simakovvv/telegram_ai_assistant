@@ -16,6 +16,7 @@ class Bot:
         self.application.add_handler(CommandHandler("start", self.handlers.start))
         self.application.add_handler(CommandHandler("help", self.handlers.help_command))
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handlers.process_message))
+        self.application.add_error_handler(self.handlers.error_handler)
 
     async def send_message(self, message: str):
         """Send a message to the specified chat_id"""

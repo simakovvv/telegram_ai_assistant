@@ -1,12 +1,19 @@
 import time
 import datetime
-from telegram.ext import CallbackContext
+import logging
+from telegram.ext import CallbackContext, ContextTypes
 from telegram import Update
 from openai import OpenAI
 from .config import client_api_key
+from .config import owner_chat_id
 from .utils import get_message_count, update_message_count, save_qa
 
 client = OpenAI(api_key=client_api_key)
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(telegram_id)s - %(message)s',
+    level=logging.ERROR 
+)
 
 class BotHandlers:
     def __init__(self, assistant_id: str, telegram_id: str):
@@ -25,7 +32,7 @@ class BotHandlers:
         """Sends a help message to the user."""
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="Помошник отвечает на любые вопросы касающиеся банныйх чанов. Если вы хотите, чтобы мы связались с вами - попросите ссылки на форму обратной связи или наш телефон.",
+            text="Помошник отвечает на любые вопросы касающиеся банных чанов. Если вы хотите, чтобы мы связались с вами - попросите ссылки на форму обратной связи или наш телефон.",
         )
 
     def get_answer(self, message_str) -> None:
@@ -78,3 +85,18 @@ class BotHandlers:
             answer,
             self.telegram_id  # Pass the bot's telegram_id to keep track
         )
+    async def error_handler(self, update,  context: ContextTypes.DEFAULT_TYPE):
+
+        logging.error("Произошла ошибка: %s", context.error)
+        """Sends a error message to the user."""
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="Сейчас ассистент отдыхает. Наша команда уже работает над его возвращением. Можете воспользоваться контактами на сайте что бы получить нужную информацию.",
+        )
+        try:
+            await context.bot.send_message(
+            chat_id=owner_chat_id,
+            text=f"Произошла ошибка: {context.error}"
+            )
+        except Exception as e:
+            logging.error(f"Не удалось уведомить владельца: {e}")

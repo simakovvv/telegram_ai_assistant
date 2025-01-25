@@ -10,9 +10,8 @@ telegram_token_bots = os.getenv("TELEGRAM_TOKEN_BOT", "").split(",")
 
 # Retrieve ASSISTANT_ID as a comma-separated string and split it into a list
 assistant_id_bots = os.getenv("ASSISTANT_ID_BOT", "").split(",")
-
 client_api_key = os.getenv("CLIENT_API_KEY")
-
+owner_chat_id = os.getenv("OWNER_CHAT_ID")
 # Optional: Clean up whitespace from each item in the lists
 telegram_token_bots = [token.strip() for token in telegram_token_bots if token.strip()]
 assistant_id_bots = [aid.strip() for aid in assistant_id_bots if aid.strip()]
@@ -21,3 +20,4 @@ assistant_id_bots = [aid.strip() for aid in assistant_id_bots if aid.strip()]
 print("Telegram Tokens:", telegram_token_bots)
 print("Assistant IDs:", assistant_id_bots)
 print("Client API Key:", client_api_key)
+print("Owner chat id:", owner_chat_id)
