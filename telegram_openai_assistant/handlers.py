@@ -7,7 +7,17 @@ from openai import OpenAI
 from .config import client_api_key
 from .config import owner_chat_id
 from .utils import get_message_count, update_message_count, save_qa
-
+from .phoneNumberUtil import is_phone_number_exists, parse_name, parse_phone
+from .config import (
+    START_MESSAGE_STICKER,
+    START_MESSAGE_TEXT,
+    HELP_MESSAGE_TEXT,
+    ERROR_MESSAGE_TEXT,
+    USER_CALLBACK_CONFIRMATION_TEXT,
+    USER_CALLBACK_REQUEST_TEXT,
+    USER_CALLBACK_REQUEST_SUMMARY_TEXT,
+    USER_DID_NOT_SEND_PHONE_TEXT
+)
 client = OpenAI(api_key=client_api_key)
 
 logging.basicConfig(
@@ -19,20 +29,20 @@ class BotHandlers:
     def __init__(self, assistant_id: str, telegram_id: str):
         self.assistant_id = assistant_id
         self.telegram_id = telegram_id
+        self.user_agrred_policies = False
 
     async def start(self, update: Update, context: CallbackContext) -> None:
         """Sends a welcome message to the user."""
-        await context.bot.send_sticker(update.effective_chat.id, "CAACAgIAAxkBAAEL3IhnkkzltKE9c7VWaAKQOCOAWBYu3QACY2IAAo_RkUgT75gxRA0-4jYE")
+        await context.bot.send_sticker(update.effective_chat.id, START_MESSAGE_STICKER)
         await context.bot.send_message(
-            chat_id=update.effective_chat.id, text="Здравствуйте! Меня зовут Дмитрий, я основатель компании Weform. Наша команда создала и обучила виртуального помощника, "
-    "чтобы помочь вам с выбором банного чана и ответить на любые вопросы. Просто спросите, что вас интересует."
+            chat_id=update.effective_chat.id, text=START_MESSAGE_TEXT
         )
 
     async def help_command(self, update: Update, context: CallbackContext) -> None:
         """Sends a help message to the user."""
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="Помошник отвечает на любые вопросы касающиеся банных чанов. Если вы хотите, чтобы мы связались с вами - попросите ссылки на форму обратной связи или наш телефон.",
+            text=HELP_MESSAGE_TEXT,
         )
 
     def get_answer(self, message_str) -> None:
@@ -63,6 +73,8 @@ class BotHandlers:
         if update.message is None:
             return  # Exit if the message is None
 
+        previous_message = context.user_data.get("previous_user_message")
+        
         message_text = update.message.text
 
         message_data = get_message_count()
@@ -76,8 +88,24 @@ class BotHandlers:
             return
 
         answer = self.get_answer(message_text)
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=answer)
-        update_message_count(count + 1)
+        
+        if USER_CALLBACK_CONFIRMATION_TEXT in answer: 
+            self.user_agrred_policies = True
+        
+        if self.user_agrred_policies:
+            # Processing callback intention
+            if previous_message is not None and is_phone_number_exists(previous_message):
+                await self.process_callback_message(previous_message)
+            elif is_phone_number_exists(message_text):
+                await self.process_callback_message(message_text)
+            else:
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=USER_DID_NOT_SEND_PHONE_TEXT)
+                update_message_count(count + 1)     
+        else:
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=answer)
+            update_message_count(count + 1)
+            context.user_data["previous_user_message"] = message_text
+            
         save_qa(
             update.effective_user.id,
             update.effective_user.username,
@@ -85,18 +113,23 @@ class BotHandlers:
             answer,
             self.telegram_id  # Pass the bot's telegram_id to keep track
         )
+        
+    async def process_callback_message(previous_message, context: CallbackContext) -> None:
+         await context.bot.send_message(
+            chat_id=owner_chat_id,
+            text=f": {previous_message}"
+            )
+
+
     async def error_handler(self, update,  context: ContextTypes.DEFAULT_TYPE):
 
-        logging.error("Произошла ошибка: %s", context.error)
+        logging.error("Error: %s", context.error)
         """Sends a error message to the user."""
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="Сейчас ассистент отдыхает. Наша команда уже работает над его возвращением. Можете воспользоваться контактами на сайте что бы получить нужную информацию.",
+            text=ERROR_MESSAGE_TEXT,
         )
-        try:
-            await context.bot.send_message(
+        await context.bot.send_message(
             chat_id=owner_chat_id,
-            text=f"Произошла ошибка: {context.error}"
-            )
-        except Exception as e:
-            logging.error(f"Не удалось уведомить владельца: {e}")
+            text=f"Error: {context.error}"
+        )

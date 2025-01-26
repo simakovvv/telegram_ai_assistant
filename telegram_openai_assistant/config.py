@@ -21,3 +21,18 @@ print("Telegram Tokens:", telegram_token_bots)
 print("Assistant IDs:", assistant_id_bots)
 print("Client API Key:", client_api_key)
 print("Owner chat id:", owner_chat_id)
+
+START_MESSAGE_STICKER = os.getenv("START_MESSAGE_STICKER")
+
+START_MESSAGE_TEXT = os.getenv("START_MESSAGE_TEXT")
+
+HELP_MESSAGE_TEXT = os.getenv("HELP_MESSAGE_TEXT")
+
+ERROR_MESSAGE_TEXT = os.getenv("ERROR_MESSAGE_TEXT")
+
+USER_CALLBACK_CONFIRMATION_TEXT = os.getenv("USER_CALLBACK_CONFIRMATION_TEXT")
+
+USER_CALLBACK_REQUEST_TEXT = os.getenv("USER_CALLBACK_REQUEST_TEXT")
+
+USER_CALLBACK_REQUEST_SUMMARY_TEXT = os.getenv("USER_CALLBACK_REQUEST_SUMMARY_TEXT")
+USER_DID_NOT_SEND_PHONE_TEXT = os.getenv("USER_DID_NOT_SEND_PHONE_TEXT")

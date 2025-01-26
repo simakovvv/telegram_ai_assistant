@@ -8,6 +8,7 @@ setup(
         'python-telegram-bot==20.6',  # Make sure to specify the correct versions
         'openai',
         'python-dotenv',
+        'phonenumbers',
         # Add other dependencies here
     ],
     entry_points={
