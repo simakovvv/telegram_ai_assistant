@@ -24,7 +24,7 @@ class BotHandlers:
         """Sends a welcome message to the user."""
         await context.bot.send_sticker(update.effective_chat.id, "CAACAgIAAxkBAAEL3IhnkkzltKE9c7VWaAKQOCOAWBYu3QACY2IAAo_RkUgT75gxRA0-4jYE")
         await context.bot.send_message(
-            chat_id=update.effective_chat.id, text="Здравствуйте! Меня зовут Дмитрий, я основатель компании Weform. Я создал виртуального помощника, "
+            chat_id=update.effective_chat.id, text="Здравствуйте! Меня зовут Дмитрий, я основатель компании Weform. Наша команда создала и обучила виртуального помощника, "
     "чтобы помочь вам с выбором банного чана и ответить на любые вопросы. Просто спросите, что вас интересует."
         )
 
