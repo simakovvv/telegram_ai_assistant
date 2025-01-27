@@ -14,6 +14,7 @@ from .config import (
     HELP_MESSAGE_TEXT,
     ERROR_MESSAGE_TEXT,
     USER_CALLBACK_CONFIRMATION_TEXT,
+    USER_CALLBACK_SUCCEED_TEXT,
     USER_CALLBACK_REQUEST_TEXT,
     USER_CALLBACK_REQUEST_SUMMARY_TEXT,
     USER_DID_NOT_SEND_PHONE_TEXT
@@ -29,7 +30,8 @@ class BotHandlers:
     def __init__(self, assistant_id: str, telegram_id: str):
         self.assistant_id = assistant_id
         self.telegram_id = telegram_id
-        self.user_agrred_policies = False
+        self.user_agreed_policies = False
+        self.user_number_sent = False
 
     async def start(self, update: Update, context: CallbackContext) -> None:
         """Sends a welcome message to the user."""
@@ -38,6 +40,11 @@ class BotHandlers:
             chat_id=update.effective_chat.id, text=START_MESSAGE_TEXT
         )
 
+    def reset_state(self):
+        """Resets the state of the bot's flags."""
+        self.user_agreed_policies = False
+        self.user_number_sent = False
+        
     async def help_command(self, update: Update, context: CallbackContext) -> None:
         """Sends a help message to the user."""
         await context.bot.send_message(
@@ -90,21 +97,28 @@ class BotHandlers:
         answer = self.get_answer(message_text)
         
         if USER_CALLBACK_CONFIRMATION_TEXT in answer: 
-            self.user_agrred_policies = True
-        
-        if self.user_agrred_policies:
+            self.user_agreed_policies = True
+       
+        if self.user_agreed_policies and not self.user_number_sent:
+            
             # Processing callback intention
-            if previous_message is not None and is_phone_number_exists(previous_message):
-                await self.process_callback_message(previous_message)
-            elif is_phone_number_exists(message_text):
-                await self.process_callback_message(message_text)
+            #if previous_message is not None and is_phone_number_exists(previous_message):
+                #await self.process_callback_message(previous_message, context)
+                #await context.bot.send_message(chat_id=update.effective_chat.id, text=USER_CALLBACK_SUCCEED_TEXT)
+                
+            if is_phone_number_exists(message_text):
+                await self.process_callback_message(message_text, context)
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=USER_CALLBACK_SUCCEED_TEXT)
+                
             else:
                 await context.bot.send_message(chat_id=update.effective_chat.id, text=USER_DID_NOT_SEND_PHONE_TEXT)
-                update_message_count(count + 1)     
+                
+            update_message_count(count + 1)     
         else:
             await context.bot.send_message(chat_id=update.effective_chat.id, text=answer)
             update_message_count(count + 1)
-            context.user_data["previous_user_message"] = message_text
+            
+        context.user_data["previous_user_message"] = message_text
             
         save_qa(
             update.effective_user.id,
@@ -114,10 +128,11 @@ class BotHandlers:
             self.telegram_id  # Pass the bot's telegram_id to keep track
         )
         
-    async def process_callback_message(previous_message, context: CallbackContext) -> None:
+    async def process_callback_message(self, message, context: CallbackContext) -> None:
+         self.user_number_sent = True 
          await context.bot.send_message(
             chat_id=owner_chat_id,
-            text=f": {previous_message}"
+            text=USER_CALLBACK_REQUEST_TEXT + " " + message
             )
 
 

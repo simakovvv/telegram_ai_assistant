@@ -17,6 +17,7 @@ class Bot:
         self.application.add_handler(CommandHandler("help", self.handlers.help_command))
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handlers.process_message))
         self.application.add_error_handler(self.handlers.error_handler)
+        self.handlers.reset_state
 
     async def send_message(self, message: str):
         """Send a message to the specified chat_id"""
@@ -33,6 +34,7 @@ class Bot:
         await self.application.updater.stop()
         await self.application.stop()
         await self.application.shutdown()
+        self.handlers.reset_state
 
 
 async def start_bots():
