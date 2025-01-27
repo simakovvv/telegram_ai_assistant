@@ -1,6 +1,7 @@
 import time
 import datetime
 import logging
+import requests
 from telegram.ext import CallbackContext, ContextTypes
 from telegram import Update
 from openai import OpenAI
@@ -9,6 +10,7 @@ from .config import owner_chat_id
 from .utils import get_message_count, update_message_count, save_qa
 from .phoneNumberUtil import is_phone_number_exists, parse_name, parse_phone
 from .config import (
+    CRM_WEBHOOK,
     START_MESSAGE_STICKER,
     START_MESSAGE_TEXT,
     HELP_MESSAGE_TEXT,
@@ -134,7 +136,22 @@ class BotHandlers:
             chat_id=owner_chat_id,
             text=USER_CALLBACK_REQUEST_TEXT + " " + message
             )
+         lead_data = {
+            "fields": {
+                "NAME": parse_name(message),
+                "PHONE": [{"VALUE": parse_phone(message), "VALUE_TYPE": "WORK"}],
+                "COMMENTS": "Dialog summary" 
+            },
+            "params": {"REGISTER_SONET_EVENT": "Y"}
+            }
 
+         result = self.send_message_crm(CRM_WEBHOOK, "crm.lead.add", lead_data)
+    
+         if result:
+            print("Lead added!")
+            print("ID:", result)
+         else:
+            print("error adding lead.")
 
     async def error_handler(self, update,  context: ContextTypes.DEFAULT_TYPE):
 
@@ -148,3 +165,21 @@ class BotHandlers:
             chat_id=owner_chat_id,
             text=f"Error: {context.error}"
         )
+        
+    def send_message_crm(self, webhook_url, method: str, data: dict):
+
+        url = f"{webhook_url}"
+        print(f"Отправляем запрос на URL: {url}")
+        try:
+            response = requests.post(url, json=data)
+            response.raise_for_status()  # exception for 4xx/5xx
+            result = response.json()
+            
+            if "result" in result:
+                return result["result"]
+            else:
+                print(f"Error in response: {result.get('error_description', 'Unknown error')}")
+                return None
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None

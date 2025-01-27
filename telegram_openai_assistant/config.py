@@ -22,6 +22,7 @@ print("Assistant IDs:", assistant_id_bots)
 print("Client API Key:", client_api_key)
 print("Owner chat id:", owner_chat_id)
 
+CRM_WEBHOOK = os.getenv("CRM_WEBHOOK")
 START_MESSAGE_STICKER = os.getenv("START_MESSAGE_STICKER")
 
 START_MESSAGE_TEXT = os.getenv("START_MESSAGE_TEXT")
