@@ -10,7 +10,6 @@ class Bot:
         self.assistant_id = assistant_id
         self.handlers = BotHandlers(self.assistant_id, token)
         self.setup_handlers()
-        self.handlers.reset_state
 
     def setup_handlers(self):
         """Sets up the command and message handlers."""
@@ -25,16 +24,17 @@ class Bot:
 
     async def start(self):
         """Start the bot."""
+        self.handlers.reset_state()
         await self.application.initialize()
         await self.application.start()
         await self.application.updater.start_polling()
 
     async def stop(self):
         """Stop the bot."""
+        self.handlers.reset_state()
         await self.application.updater.stop()
         await self.application.stop()
         await self.application.shutdown()
-        self.handlers.reset_state
 
 
 async def start_bots():

@@ -22,19 +22,27 @@ def update_message_count(new_count):
 def save_qa(telegram_id, username, question, answer, bot_name):
     """Save question and answer pairs to a file with user information for each bot."""
     # Specify the file for each bot's Q&A data
-    qa_file = Path(f"{bot_name}_questions_answers.json")
+    qa_file = Path(f"{telegram_id}_questions_answers.json")
     
     if not qa_file.exists():
-        with open(qa_file, 'w') as file:
-            json.dump([], file)
-    
-    with open(qa_file, 'r+') as file:
-        data = json.load(file)
-        data.append({
-            "telegram_id": telegram_id,
-            "username": username,
-            "question": question,
-            "answer": answer
-        })
-        file.seek(0)
-        json.dump(data, file, indent=4)
+        try:
+            with open(qa_file, "w") as file:
+                json.dump([], file)
+            print(f"File {qa_file} created successfully.")
+        except Exception as e:
+            print(f"Failed to create file {qa_file}: {e}")
+        
+    try:
+        with open(qa_file, "r+") as file:
+            data = json.load(file)
+            data.append({
+                "telegram_id": telegram_id,
+                "username": username,
+                "question": question,
+                "answer": answer
+            })
+            file.seek(0)
+            json.dump(data, file, indent=4)
+            print("Q&A saved successfully. File location: " + str(qa_file.resolve()))
+    except Exception as e:
+        print(f"Failed to save Q&A: {e}")

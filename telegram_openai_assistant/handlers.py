@@ -37,6 +37,7 @@ class BotHandlers:
 
     async def start(self, update: Update, context: CallbackContext) -> None:
         """Sends a welcome message to the user."""
+        self.reset_state()
         await context.bot.send_sticker(update.effective_chat.id, START_MESSAGE_STICKER)
         await context.bot.send_message(
             chat_id=update.effective_chat.id, text=START_MESSAGE_TEXT
@@ -81,8 +82,6 @@ class BotHandlers:
         """Processes a message from the user, gets an answer, and sends it back."""
         if update.message is None:
             return  # Exit if the message is None
-
-        previous_message = context.user_data.get("previous_user_message")
         
         message_text = update.message.text
 
@@ -98,16 +97,8 @@ class BotHandlers:
 
         answer = self.get_answer(message_text)
         
-        if USER_CALLBACK_CONFIRMATION_TEXT in answer: 
-            self.user_agreed_policies = True
-       
         if self.user_agreed_policies and not self.user_number_sent:
             
-            # Processing callback intention
-            #if previous_message is not None and is_phone_number_exists(previous_message):
-                #await self.process_callback_message(previous_message, context)
-                #await context.bot.send_message(chat_id=update.effective_chat.id, text=USER_CALLBACK_SUCCEED_TEXT)
-                
             if is_phone_number_exists(message_text):
                 await self.process_callback_message(message_text, context)
                 await context.bot.send_message(chat_id=update.effective_chat.id, text=USER_CALLBACK_SUCCEED_TEXT)
@@ -120,8 +111,9 @@ class BotHandlers:
             await context.bot.send_message(chat_id=update.effective_chat.id, text=answer)
             update_message_count(count + 1)
             
-        context.user_data["previous_user_message"] = message_text
-            
+        if USER_CALLBACK_CONFIRMATION_TEXT in answer: 
+            self.user_agreed_policies = True
+        print("Q&A save start.")
         save_qa(
             update.effective_user.id,
             update.effective_user.username,
@@ -150,8 +142,16 @@ class BotHandlers:
          if result:
             print("Lead added!")
             print("ID:", result)
+            await context.bot.send_message(
+                chat_id=owner_chat_id,
+                text=message +  " lead added to srm"
+            )
          else:
             print("error adding lead.")
+            await context.bot.send_message(
+                chat_id=owner_chat_id,
+                text=USER_CALLBACK_REQUEST_TEXT + " " + message + " lead are not added to srm"
+                )
 
     async def error_handler(self, update,  context: ContextTypes.DEFAULT_TYPE):
 
