@@ -7,7 +7,7 @@ from telegram import Update
 from openai import OpenAI
 from .config import client_api_key
 from .config import owner_chat_id
-from .utils import get_message_count, update_message_count, save_qa
+from .utils import get_message_count, update_message_count, save_qa, get_dialog_history
 from .phoneNumberUtil import is_phone_number_exists, parse_name, parse_phone
 from .config import (
     CRM_WEBHOOK,
@@ -19,8 +19,17 @@ from .config import (
     USER_CALLBACK_SUCCEED_TEXT,
     USER_CALLBACK_REQUEST_TEXT,
     USER_CALLBACK_REQUEST_SUMMARY_TEXT,
-    USER_DID_NOT_SEND_PHONE_TEXT
+    USER_DID_NOT_SEND_PHONE_TEXT,
+    CHAT_OWNER_DIALOG_SUMMARY_REQUEST,
+    CHAT_OWNER_READY_TO_BUY_DIALOG_ESTIMATION_REQUEST,
+    CHAT_OWNER_READY_TO_BUY_DIALOG_DISKOUNT_MARKER,
+    USER_DISCOUNT_PROVIDED_NOTIFICATIION,
+    CHAT_OWNER_DISCOUNT_PROVIDED_NOTIFICATIION,
+    PROMOCODE_DETAILS
 )
+
+INACTIVITY_TIMEOUT = 300  # 5 min
+
 client = OpenAI(api_key=client_api_key)
 
 logging.basicConfig(
@@ -77,9 +86,25 @@ class BotHandlers:
         messages = client.beta.threads.messages.list(thread_id=thread.id)
         response = messages.dict()["data"][0]["content"][0]["text"]["value"]
         return response
+    
+    async def timeout_end(self, update: Update, context: CallbackContext):
+        # This code will estimate user interes to product and suggest some discount to stir up customer interes
+         dialog_str = get_dialog_history(update.effective_user.id)
+         discount_estimation = self.get_answer(CHAT_OWNER_READY_TO_BUY_DIALOG_ESTIMATION_REQUEST + dialog_str)
+         
+         if CHAT_OWNER_READY_TO_BUY_DIALOG_DISKOUNT_MARKER in discount_estimation: 
+             client_msg = USER_DISCOUNT_PROVIDED_NOTIFICATIION + update.effective_user.username
+             chat_owner_msg = CHAT_OWNER_DISCOUNT_PROVIDED_NOTIFICATIION + update.effective_user.username
+             await context.bot.send_message(chat_id=owner_chat_id,text=chat_owner_msg)
+             await context.bot.send_message(chat_id=update.effective_chat.id, text=client_msg)
 
+         
     async def process_message(self, update: Update, context: CallbackContext) -> None:
         """Processes a message from the user, gets an answer, and sends it back."""
+        
+        job = context.job_queue.run_once(self.timeout_end, INACTIVITY_TIMEOUT, chat_id=update.effective_chat.id, name="inactivity_timeout", context=(update, context))
+        
+        context.user_data["timeout_job"] = job
         if update.message is None:
             return  # Exit if the message is None
         
@@ -100,7 +125,7 @@ class BotHandlers:
         if self.user_agreed_policies and not self.user_number_sent:
             
             if is_phone_number_exists(message_text):
-                await self.process_callback_message(message_text, context)
+                await self.process_callback_message(message_text, update, context)
                 await context.bot.send_message(chat_id=update.effective_chat.id, text=USER_CALLBACK_SUCCEED_TEXT)
                 
             else:
@@ -113,7 +138,7 @@ class BotHandlers:
             
         if USER_CALLBACK_CONFIRMATION_TEXT in answer: 
             self.user_agreed_policies = True
-        print("Q&A save start.")
+
         save_qa(
             update.effective_user.id,
             update.effective_user.username,
@@ -122,17 +147,21 @@ class BotHandlers:
             self.telegram_id  # Pass the bot's telegram_id to keep track
         )
         
-    async def process_callback_message(self, message, context: CallbackContext) -> None:
+    async def process_callback_message(self, message, update: Update, context: CallbackContext) -> None:
          self.user_number_sent = True 
+         
+         dialog_str = get_dialog_history(update.effective_user.id)
+         dialog_summary = self.get_answer(CHAT_OWNER_DIALOG_SUMMARY_REQUEST + dialog_str)
          await context.bot.send_message(
             chat_id=owner_chat_id,
-            text=USER_CALLBACK_REQUEST_TEXT + " " + message
+            text=USER_CALLBACK_REQUEST_TEXT + " " + message + " " + USER_CALLBACK_REQUEST_SUMMARY_TEXT + " " + dialog_summary
             )
+
          lead_data = {
             "fields": {
                 "NAME": parse_name(message),
                 "PHONE": [{"VALUE": parse_phone(message), "VALUE_TYPE": "WORK"}],
-                "COMMENTS": "Dialog summary" 
+                "COMMENTS": dialog_summary 
             },
             "params": {"REGISTER_SONET_EVENT": "Y"}
             }
