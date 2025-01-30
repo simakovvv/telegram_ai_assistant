@@ -38,11 +38,12 @@ logging.basicConfig(
 )
 
 class BotHandlers:
-    def __init__(self, assistant_id: str, telegram_id: str):
+    def __init__(self, assistant_id: str, telegram_id: str, application):
         self.assistant_id = assistant_id
         self.telegram_id = telegram_id
         self.user_agreed_policies = False
         self.user_number_sent = False
+        self.job_queue = application.job_queue 
 
     async def start(self, update: Update, context: CallbackContext) -> None:
         """Sends a welcome message to the user."""
