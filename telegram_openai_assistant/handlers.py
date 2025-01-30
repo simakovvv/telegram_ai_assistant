@@ -102,8 +102,8 @@ class BotHandlers:
          
     async def process_message(self, update: Update, context: CallbackContext) -> None:
         """Processes a message from the user, gets an answer, and sends it back."""
-        
-        job = context.job_queue.run_once(self.timeout_end, INACTIVITY_TIMEOUT, chat_id=update.effective_chat.id, name="inactivity_timeout", context=(update, context))
+        job_queue = context.application.job_queue
+        job = job_queue.run_once(self.timeout_end, INACTIVITY_TIMEOUT, chat_id=update.effective_chat.id, name="inactivity_timeout")
         
         context.user_data["timeout_job"] = job
         if update.message is None:

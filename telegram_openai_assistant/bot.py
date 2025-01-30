@@ -8,7 +8,7 @@ class Bot:
         """Initialize the bot application with a token and assistant_id"""
         self.application = ApplicationBuilder().token(token).build()
         self.assistant_id = assistant_id
-        self.handlers = BotHandlers(self.assistant_id, token)
+        self.handlers = BotHandlers(self.assistant_id, token, self.application)
         self.setup_handlers()
 
     def setup_handlers(self):
