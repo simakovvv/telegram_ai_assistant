@@ -58,8 +58,10 @@ def save_qa(telegram_id, username, question, answer, bot_name):
     except Exception as e:
         print(f"Failed to save Q&A: {e}")
         
-def get_dialog_history(telegram_id: int) -> str:
+def get_dialog_history(telegram_id: int, bot_name) -> str:
     """Retrieve dialog history for a given Telegram ID as a JSON string."""
+    file_name = sanitize_filename(bot_name)
+    qa_file = Path(f"{file_name}_questions_answers.json")
     try:
         if not qa_file.exists():
             return json.dumps({"error": "Dialog history not found."}) 

@@ -90,7 +90,7 @@ class BotHandlers:
     
     async def timeout_end(self, update: Update, context: CallbackContext):
         # This code will estimate user interes to product and suggest some discount to stir up customer interes
-         dialog_str = get_dialog_history(update.effective_user.id)
+         dialog_str = get_dialog_history(update.effective_user.id, self.telegram_id)
          discount_estimation = self.get_answer(CHAT_OWNER_READY_TO_BUY_DIALOG_ESTIMATION_REQUEST + dialog_str)
          
          if CHAT_OWNER_READY_TO_BUY_DIALOG_DISKOUNT_MARKER in discount_estimation: 
@@ -109,13 +109,13 @@ class BotHandlers:
         if update.message is None:
             return  # Exit if the message is None
         
-        dialog_promt = "This in the dialog context. You need to answer only question at the end of the message" 
-        dialog_str = get_dialog_history(update.effective_user.id)
-        message_promt = "Answer only this question on the language given in the question"
+        dialog_promt = "This in the dialog context. You need to answer only question at the end of the message " 
+        dialog_str = get_dialog_history(update.effective_user.id, self.telegram_id)
+        message_promt = " Answer only this question on the language given in the question: "
         message_text = update.message.text
         
         final_promt = dialog_promt + dialog_str + message_promt + message_text
-
+        print(f"final_promt: {final_promt}")
         message_data = get_message_count()
         count = message_data["count"]
         date = message_data["date"]
@@ -156,7 +156,7 @@ class BotHandlers:
     async def process_callback_message(self, message, update: Update, context: CallbackContext) -> None:
          self.user_number_sent = True 
          
-         dialog_str = get_dialog_history(update.effective_user.id)
+         dialog_str = get_dialog_history(update.effective_user.id, self.telegram_id)
          dialog_summary = self.get_answer(CHAT_OWNER_DIALOG_SUMMARY_REQUEST + dialog_str)
          await context.bot.send_message(
             chat_id=owner_chat_id,
