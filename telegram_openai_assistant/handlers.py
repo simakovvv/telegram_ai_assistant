@@ -1,4 +1,5 @@
 import time
+import re
 import datetime
 import logging
 import requests
@@ -75,6 +76,7 @@ class BotHandlers:
         run = client.beta.threads.runs.create(
             thread_id=thread.id,
             assistant_id=self.assistant_id,  # Use the assistant_id passed when creating the handler
+            max_tokens=8192 
         )
 
         # Poll for the response (this could be improved with async calls)
@@ -109,11 +111,12 @@ class BotHandlers:
         if update.message is None:
             return  # Exit if the message is None
         
-        dialog_promt = "This in the dialog context. You need to answer only question at the end of the message " 
+        dialog_promt = "This in the dialog history. Study the history of answers and questions of this user and all details on the product he is interested in. When giving an answer I use all the details of the dialogue history in order to form an answer. At the end of the message you will find a question that needs to be answered. " 
         dialog_str = get_dialog_history(update.effective_user.id, self.telegram_id)
-        message_promt = " Answer only this question on the language given in the question: "
+        message_promt = " Answer this question on the language given in the question: "
         message_text = update.message.text
         
+
         final_promt = dialog_promt + dialog_str + message_promt + message_text
         print(f"final_promt: {final_promt}")
         message_data = get_message_count()
@@ -126,7 +129,8 @@ class BotHandlers:
         if count >= 100:
             return
 
-        answer = self.get_answer(final_promt)
+        answerRaw = self.get_answer(final_promt)
+        answer = self.parse_and_clean_response(answerRaw)
         
         if self.user_agreed_policies and not self.user_number_sent:
             
@@ -153,6 +157,21 @@ class BotHandlers:
             self.telegram_id  # Pass the bot's telegram_id to keep track
         )
         
+    def parse_and_clean_response(response: str) -> str:
+        """
+        Parses text, removing content in square brackets if it's not a link.
+        """
+        def replacer(match):
+            text = match.group(1)
+            # Check if the text is a link (HTTP or HTTPS)
+            if re.match(r'^(https?://)', text, re.IGNORECASE):
+                return f'[{text}]'
+            return ''  # Remove text if it's not a link
+
+        # Find text in square brackets and process it with the replacer function
+        cleaned_response = re.sub(r'\[(.*?)\]', replacer, response)
+        return cleaned_response  
+
     async def process_callback_message(self, message, update: Update, context: CallbackContext) -> None:
          self.user_number_sent = True 
          

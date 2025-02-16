@@ -64,6 +64,7 @@ def get_dialog_history(telegram_id: int, bot_name) -> str:
     qa_file = Path(f"{file_name}_questions_answers.json")
     try:
         if not qa_file.exists():
+            print(f"Error: Dialog history not found for bot: {bot_name}")
             return json.dumps({"error": "Dialog history not found."}) 
         
         with open(qa_file, "r", encoding="utf-8") as file:
@@ -71,7 +72,11 @@ def get_dialog_history(telegram_id: int, bot_name) -> str:
 
         user_dialogs = [entry for entry in data if entry.get("telegram_id") == telegram_id]
 
+        message_count = len(user_dialogs)
+        print(f"Found {message_count} messages for Telegram ID {telegram_id} in bot '{bot_name}'")
+
         return json.dumps(user_dialogs, ensure_ascii=False, indent=4)
 
     except Exception as e:
+        print(f"Error: Failed to retrieve dialog history for Telegram ID {telegram_id}: {str(e)}")
         return json.dumps({"error": f"Failed to retrieve dialog history: {str(e)}"})
