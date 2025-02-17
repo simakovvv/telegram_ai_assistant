@@ -157,18 +157,18 @@ class BotHandlers:
             self.telegram_id  # Pass the bot's telegram_id to keep track
         )
         
-    def parse_and_clean_response(response: str) -> str:
+    def parse_and_clean_response(self, response: str) -> str:
         """
         Parses text, removing content in square brackets if it's not a link.
         """
+        import re
+
         def replacer(match):
             text = match.group(1)
-            # Check if the text is a link (HTTP or HTTPS)
             if re.match(r'^(https?://)', text, re.IGNORECASE):
                 return f'[{text}]'
             return ''  # Remove text if it's not a link
 
-        # Find text in square brackets and process it with the replacer function
         cleaned_response = re.sub(r'\[(.*?)\]', replacer, response)
         return cleaned_response  
 
