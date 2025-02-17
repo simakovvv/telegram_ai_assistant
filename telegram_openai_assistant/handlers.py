@@ -76,7 +76,7 @@ class BotHandlers:
         run = client.beta.threads.runs.create(
             thread_id=thread.id,
             assistant_id=self.assistant_id,  # Use the assistant_id passed when creating the handler
-            max_tokens=8192 
+            max_prompt_tokens=8192 
         )
 
         # Poll for the response (this could be improved with async calls)
