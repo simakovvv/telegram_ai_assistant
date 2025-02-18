@@ -8,7 +8,7 @@ from telegram import Update
 from openai import OpenAI
 from .config import client_api_key
 from .config import owner_chat_id
-from .utils import get_message_count, update_message_count, save_qa, get_dialog_history
+from .utils import get_message_count, update_message_count, save_qa, get_dialog_history,get_dialog_history_short
 from .phoneNumberUtil import is_phone_number_exists, parse_name, parse_phone
 from .config import (
     CRM_WEBHOOK,
@@ -112,7 +112,7 @@ class BotHandlers:
             return  # Exit if the message is None
         
         dialog_promt = "This in the dialog history. Study the history of answers and questions of this user and all details on the product he is interested in. When giving an answer I use all the details of the dialogue history in order to form an answer. At the end of the message you will find a question that needs to be answered. " 
-        dialog_str = get_dialog_history(update.effective_user.id, self.telegram_id)
+        dialog_str = get_dialog_history_short(update.effective_user.id, self.telegram_id)
         message_promt = " Answer this question on the language given in the question: "
         message_text = update.message.text
         
