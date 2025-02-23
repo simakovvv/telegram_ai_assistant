@@ -82,9 +82,10 @@ def get_dialog_history(telegram_id: int, bot_name) -> str:
         return json.dumps({"error": f"Failed to retrieve dialog history: {str(e)}"})
 
 def get_dialog_history_short(telegram_id: int, bot_name) -> str:
-    """Retrieve the last 5 dialog messages for a given Telegram ID as a JSON string."""
+    """Retrieve the last 10 dialog messages for a given Telegram ID as a JSON string without the 'answer' field."""
     file_name = sanitize_filename(bot_name)
     qa_file = Path(f"{file_name}_questions_answers.json")
+
     try:
         if not qa_file.exists():
             print(f"Error: Dialog history not found for bot: {bot_name}")
@@ -93,15 +94,19 @@ def get_dialog_history_short(telegram_id: int, bot_name) -> str:
         with open(qa_file, "r", encoding="utf-8") as file:
             data = json.load(file)
 
+        # Filter messages for the given telegram_id
         user_dialogs = [entry for entry in data if entry.get("telegram_id") == telegram_id]
 
-        # Get the last 5 messages
-        last_5_messages = user_dialogs[-5:]
+        # Get the last 10 messages
+        last_10_messages = user_dialogs[-10:]
 
-        message_count = len(last_5_messages)
-        print(f"Found {message_count} messages for Telegram ID {telegram_id} in bot '{bot_name}'")
+        # Create a new list with "answer" field removed while preserving the structure
+        cleaned_messages = [{k: v for k, v in message.items() if k != "answer"} for message in last_10_messages]
 
-        return json.dumps(last_5_messages, ensure_ascii=False, indent=4)
+        message_count = len(cleaned_messages)
+        print(f"Found {message_count} messages for Telegram ID {telegram_id} in bot '{bot_name}' (without answers)")
+
+        return json.dumps(cleaned_messages, ensure_ascii=False, indent=4)
 
     except Exception as e:
         print(f"Error: Failed to retrieve dialog history for Telegram ID {telegram_id}: {str(e)}")
