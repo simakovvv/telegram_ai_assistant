@@ -102,6 +102,8 @@ def get_dialog_history_short(telegram_id: int, bot_name) -> str:
 
         # Create a new list with "answer" field removed while preserving the structure
         cleaned_messages = [{k: v for k, v in message.items() if k != "answer"} for message in last_10_messages]
+        cleaned_messages = [{k: v for k, v in message.items() if k != "username"} for message in last_10_messages]
+        cleaned_messages = [{k: v for k, v in message.items() if k != "telegram_id"} for message in last_10_messages]
 
         message_count = len(cleaned_messages)
         print(f"Found {message_count} messages for Telegram ID {telegram_id} in bot '{bot_name}' (without answers)")
